@@ -3,26 +3,30 @@ package handlers
 import (
 	"net/http"
 	"net/http/httptest"
-	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-func TestHealthCheckHandler(t *testing.T) {
-	req, err := http.NewRequest("GET", "/health-check", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+var _ = Describe("Health Check Handler", func() {
+	var (
+		rr *httptest.ResponseRecorder
+	)
+	BeforeEach(func() {
+		req, err := http.NewRequest("GET", "/health-check", nil)
+		Expect(err).NotTo(HaveOccurred())
 
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(HealthCheckHandler)
+		rr = httptest.NewRecorder()
+		handler := http.HandlerFunc(HealthCheckHandler)
 
-	handler.ServeHTTP(rr, req)
+		handler.ServeHTTP(rr, req)
+	})
 
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
+	It("returns 200", func() {
+		Expect(rr.Code).To(Equal(http.StatusOK))
+	})
 
-	expected := `{ "alive": true }`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
-	}
-}
+	It("returns 'alive' payload", func() {
+		Expect(rr.Body.String()).To(Equal(`{ "alive": true }`))
+	})
+})
